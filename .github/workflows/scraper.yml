@@ -17,23 +17,45 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Scrape tables - 21f2000153@ds.study.iitm.ac.in
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-v1208
+
+      - name: Install dependencies
         run: |
           npm init -y
           npm install playwright
-          npx playwright install chromium --with-deps
+
+      - name: Install Chromium - 21f2000153@ds.study.iitm.ac.in
+        run: npx playwright install chromium --with-deps
+
+      - name: Scrape tables
+        run: |
           node -e "
           const { chromium } = require('playwright');
           (async () => {
             const browser = await chromium.launch();
             const page = await browser.newPage();
-
-            // Debug: check what the page looks like
-            await page.goto('https://sanand0.github.io/tdsdata/table/?seed=84', { waitUntil: 'domcontentloaded' });
-            await page.waitForTimeout(5000);
-            const html = await page.content();
-            console.log('PAGE HTML:', html.substring(0, 2000));
-
+            const seeds = [84,85,86,87,88,89,90,91,92,93];
+            let total = 0;
+            for (const seed of seeds) {
+              await page.goto('https://sanand0.github.io/tdsdata/js_table/?seed=' + seed, { waitUntil: 'networkidle' });
+              await page.waitForTimeout(2000);
+              const sum = await page.evaluate(() => {
+                let s = 0;
+                document.querySelectorAll('td, th').forEach(cell => {
+                  const text = cell.innerText.trim();
+                  const n = Number(text);
+                  if (!isNaN(n) && text !== '') s += n;
+                });
+                return s;
+              });
+              console.log('Seed ' + seed + ': ' + sum);
+              total += sum;
+            }
+            console.log('TOTAL SUM: ' + total);
             await browser.close();
           })();
           "
