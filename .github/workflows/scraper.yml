@@ -31,7 +31,8 @@ jobs:
             let total = 0;
             for (const seed of seeds) {
               await page.goto('https://sanand0.github.io/tdsdata/table/?seed=' + seed);
-              await page.waitForLoadState('networkidle');
+              await page.waitForSelector('table td', { timeout: 10000 });
+              await page.waitForTimeout(2000);
               const sum = await page.evaluate(() => {
                 let s = 0;
                 document.querySelectorAll('table td, table th').forEach(cell => {
