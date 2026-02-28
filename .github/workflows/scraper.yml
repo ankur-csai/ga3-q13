@@ -1,0 +1,49 @@
+name: Playwright Table Scraper
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Scrape tables - 21f2000153@ds.study.iitm.ac.in
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install chromium --with-deps
+          node -e "
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch();
+            const page = await browser.newPage();
+            const seeds = [84,85,86,87,88,89,90,91,92,93];
+            let total = 0;
+            for (const seed of seeds) {
+              await page.goto('https://sanand0.github.io/tdsdata/table/?seed=' + seed);
+              await page.waitForLoadState('networkidle');
+              const sum = await page.evaluate(() => {
+                let s = 0;
+                document.querySelectorAll('table td, table th').forEach(cell => {
+                  const n = parseFloat(cell.textContent.trim());
+                  if (!isNaN(n)) s += n;
+                });
+                return s;
+              });
+              console.log('Seed ' + seed + ': ' + sum);
+              total += sum;
+            }
+            console.log('TOTAL SUM: ' + total);
+            await browser.close();
+          })();
+          "
