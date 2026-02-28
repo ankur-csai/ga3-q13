@@ -27,25 +27,13 @@ jobs:
           (async () => {
             const browser = await chromium.launch();
             const page = await browser.newPage();
-            const seeds = [84,85,86,87,88,89,90,91,92,93];
-            let total = 0;
-            for (const seed of seeds) {
-              await page.goto('https://sanand0.github.io/tdsdata/table/?seed=' + seed, { waitUntil: 'domcontentloaded' });
-              await page.waitForTimeout(3000);
-              const sum = await page.evaluate(() => {
-                let s = 0;
-                const cells = document.querySelectorAll('td, th');
-                cells.forEach(cell => {
-                  const text = cell.innerText.trim();
-                  const n = Number(text);
-                  if (!isNaN(n) && text !== '') s += n;
-                });
-                return s;
-              });
-              console.log('Seed ' + seed + ': ' + sum);
-              total += sum;
-            }
-            console.log('TOTAL SUM: ' + total);
+
+            // Debug: check what the page looks like
+            await page.goto('https://sanand0.github.io/tdsdata/table/?seed=84', { waitUntil: 'domcontentloaded' });
+            await page.waitForTimeout(5000);
+            const html = await page.content();
+            console.log('PAGE HTML:', html.substring(0, 2000));
+
             await browser.close();
           })();
           "
