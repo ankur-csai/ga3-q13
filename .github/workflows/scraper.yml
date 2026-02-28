@@ -30,14 +30,15 @@ jobs:
             const seeds = [84,85,86,87,88,89,90,91,92,93];
             let total = 0;
             for (const seed of seeds) {
-              await page.goto('https://sanand0.github.io/tdsdata/table/?seed=' + seed);
-              await page.waitForSelector('table td', { timeout: 10000 });
-              await page.waitForTimeout(2000);
+              await page.goto('https://sanand0.github.io/tdsdata/table/?seed=' + seed, { waitUntil: 'domcontentloaded' });
+              await page.waitForTimeout(3000);
               const sum = await page.evaluate(() => {
                 let s = 0;
-                document.querySelectorAll('table td, table th').forEach(cell => {
-                  const n = parseFloat(cell.textContent.trim());
-                  if (!isNaN(n)) s += n;
+                const cells = document.querySelectorAll('td, th');
+                cells.forEach(cell => {
+                  const text = cell.innerText.trim();
+                  const n = Number(text);
+                  if (!isNaN(n) && text !== '') s += n;
                 });
                 return s;
               });
